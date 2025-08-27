@@ -14,6 +14,37 @@ def printRootChildren(color):
     for child in root:
         # Do something with each child element
         colored_print(child.tag, color)
+def deleteNodes(root, NODE_TO_FIND):
+    NODE_TO_FIND = "{http://soap.sforce.com/2006/04/metadata}" + NODE_TO_FIND
+    print("Looking for " + NODE_TO_FIND)
+    elements = root.findall(NODE_TO_FIND)
+    # delete the first level of children, then look for the children of the children
+    for element in elements:
+        print("removing " + element.tag)
+        root.remove(element)
+
+    for child in root:
+        print("checking child " + child.tag)
+        for c2 in child:
+            print("checking grandchild " + c2.tag)
+            if c2.tag == NODE_TO_FIND:
+                #found = True
+                colored_print("remove " + NODE_TO_FIND + " from child " + child.tag, "yellow")
+                child.remove(c2)
+    return root
+def writeToFile(root, outputFile):
+    output = outputFile
+    colored_print("Writing to " + output, "yellow")
+    xml_string = ET.tostring(root).decode()
+    xml_string = xml_string.replace("ns0:", "")
+    xml_string = xml_string.replace("ns0=", "")
+    xml_string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+xml_string
+    xml_string = xml_string.replace("xmlns:", "xmlns=")
+    if debug == "t" or debug == "true":
+        colored_print(xml_string, "green")
+
+    with open(output, "w") as file:
+        file.write(xml_string)
 #--------------------------------------------------
 
 #params -------------------------------------------
@@ -73,38 +104,6 @@ colored_print("Opening fie - " + INPUTFILE, "yellow")
 tree = ET.parse(INPUTFILE)
 root = tree.getroot()
 
-#printRootChildren("cyan")
+root = deleteNodes(root, NODE_TO_FIND)
 
-# Find all <listViews> elements
-NODE_TO_FIND = "{http://soap.sforce.com/2006/04/metadata}" + NODE_TO_FIND
-elements = root.findall(NODE_TO_FIND)
-
-# delete the first level of children, then look for the children of the children
-for element in elements:
-    root.remove(element)
-
-for child in root:
-    for c2 in child:
-        if c2.tag == NODE_TO_FIND:
-            #found = True
-            colored_print("remove " + NODE_TO_FIND + " from child " + child.tag, "yellow")
-            child.remove(c2)
-
-    
-#if bool(found) == False:
-   # colored_print("No elements called '" + NODE_TO_FIND + "' found.", "red")
-    #exit()
-#output = file_name+".object"
-output = outputFile
-colored_print("Writing to " + output, "yellow")
-
-xml_string = ET.tostring(root).decode()
-xml_string = xml_string.replace("ns0:", "")
-xml_string = xml_string.replace("ns0=", "")
-xml_string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+xml_string
-xml_string = xml_string.replace("xmlns:", "xmlns=")
-if debug == "t" or debug == "true":
-    colored_print(xml_string, "green")
-
-with open(output, "w") as file:
-    file.write(xml_string)
+writeToFile(root, outputFile)
