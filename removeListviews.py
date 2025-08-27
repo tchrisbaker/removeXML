@@ -1,54 +1,10 @@
-import sys
 import xml.etree.ElementTree as ET
-import logging
-
-from termcolor import colored
 import argparse
-
-
-#functions -----------------------------------------
-def colored_print(text, color):
-  print(colored(text, color))
-def printRootChildren(color):
-    # Iterate over all elements that are children of the root node
-    for child in root:
-        # Do something with each child element
-        colored_print(child.tag, color)
-def deleteNodes(root, NODE_TO_FIND):
-    NODE_TO_FIND = "{http://soap.sforce.com/2006/04/metadata}" + NODE_TO_FIND
-    print("Looking for " + NODE_TO_FIND)
-    elements = root.findall(NODE_TO_FIND)
-    # delete the first level of children, then look for the children of the children
-    for element in elements:
-        print("removing " + element.tag)
-        root.remove(element)
-
-    for child in root:
-        print("checking child " + child.tag)
-        for c2 in child:
-            print("checking grandchild " + c2.tag)
-            if c2.tag == NODE_TO_FIND:
-                #found = True
-                colored_print("remove " + NODE_TO_FIND + " from child " + child.tag, "yellow")
-                child.remove(c2)
-    return root
-def writeToFile(root, outputFile):
-    output = outputFile
-    colored_print("Writing to " + output, "yellow")
-    xml_string = ET.tostring(root).decode()
-    xml_string = xml_string.replace("ns0:", "")
-    xml_string = xml_string.replace("ns0=", "")
-    xml_string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"+xml_string
-    xml_string = xml_string.replace("xmlns:", "xmlns=")
-    if debug == "t" or debug == "true":
-        colored_print(xml_string, "green")
-
-    with open(output, "w") as file:
-        file.write(xml_string)
-#--------------------------------------------------
+from deleteXMLNodes import deleteNodes
+from writeToFile import writeToFile
+from coloredPrint import colored_print, printRootChildren
 
 #params -------------------------------------------
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--debug", type=str, default="false", help="debug to console, default is false")
@@ -96,9 +52,8 @@ if outputFile is None:
 
 #--------------------------------------------------
 
-#INPUTFILE = "objects/" + file_name + ".object"
 INPUTFILE = file_name
-#INPUTFILE = file_name
+
 colored_print("Opening fie - " + INPUTFILE, "yellow")
 # Parse the XML file
 tree = ET.parse(INPUTFILE)
